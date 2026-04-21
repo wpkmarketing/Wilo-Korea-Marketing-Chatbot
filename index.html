@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Wilo Korea MKT Chatbot</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; }
+        #chat-container { width: 400px; height: 500px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
+        #messages { flex: 1; padding: 20px; overflow-y: auto; border-bottom: 1px solid #eee; }
+        #input-area { display: flex; padding: 10px; }
+        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; outline: none; }
+        button { margin-left: 10px; padding: 10px 20px; background: #0054a6; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="messages"><strong>💧 윌로코리아 마케팅팀 챗봇</strong><br>무엇을 도와드릴까요?</div>
+        <div id="input-area">
+            <input type="text" id="user-input" placeholder="질문을 입력하세요...">
+            <button onclick="send()">전송</button>
+        </div>
+    </div>
+
+    <script>
+        async function send() {
+            const input = document.getElementById('user-input');
+            const msgDiv = document.getElementById('messages');
+            if(!input.value) return;
+
+            msgDiv.innerHTML += `<div><strong>나:</strong> ${input.value}</div>`;
+            
+            // faq.json 데이터 가져오기 로직 (간단 구현)
+            const response = await fetch('faq.json');
+            const faqs = await response.json();
+            
+            let answer = "상세 상담이 필요하시면 1688-5890으로 연락 부탁드립니다.";
+            faqs.forEach(item => {
+                if(input.value.includes(item.question.substring(0, 5)) || item.tags.some(tag => input.value.includes(tag))) {
+                    answer = item.answer;
+                }
+            });
+
+            msgDiv.innerHTML += `<div style="margin-top:10px; color:#0054a6;"><strong>챗봇:</strong> ${answer}</div>`;
+            input.value = '';
+            msgDiv.scrollTop = msgDiv.scrollHeight;
+        }
+    </script>
+</body>
+</html>
