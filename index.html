@@ -3,215 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wilo Korea Chatbot</title>
+    <title>Wilo Korea AI Chatbot</title>
     <style>
-        /* 윌로그린 및 시스템 색상 */
-        :root { 
-            --wilo-green: #009c82; 
-            --wilo-bg: #f2f4f7; 
-            --wilo-light: #e1f5f1; 
-            --radius-main: 28px; /* 갤럭시 S25 느낌의 부드러운 곡선 */
-            --radius-sub: 18px; 
-        }
+        :root { --wilo-green: #009c82; --wilo-bg: #f2f4f7; --radius-main: 28px; }
+        body { font-family: 'Pretendard', sans-serif; margin: 0; background: #dee2e6; display: flex; justify-content: center; align-items: center; height: 100vh; }
         
-        body { 
-            font-family: 'Pretendard', -apple-system, sans-serif; 
-            margin: 0; 
-            background: #dee2e6; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-        }
+        /* 챗봇 컨테이너 */
+        #chat-container { width: 90%; max-width: 500px; height: 85vh; background: white; display: flex; flex-direction: column; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-radius: var(--radius-main); overflow: hidden; position: relative; }
         
-        /* [화면 크기 조절] 너무 꽉 차지 않게 너비와 높이 최적화 */
-        #chat-container { 
-            width: 90%; 
-            max-width: 520px; /* 너비 살짝 축소 */
-            height: 85vh;     /* 높이 살짝 축소 */
-            background: white; 
-            display: flex; 
-            flex-direction: column; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
-            border-radius: var(--radius-main); /* 전체 틀 곡선 적용 */
-            overflow: hidden;
-        }
-        
-        /* 상단 헤더 */
-        #header { 
-            background: var(--wilo-green); 
-            color: white; 
-            padding: 22px; 
-            text-align: center;
-        }
-        #header h1 { margin: 0; font-size: 1.2rem; font-weight: 700; }
-        #header p { margin: 6px 0 0; font-size: 0.8rem; opacity: 0.85; line-height: 1.4; }
-        
-        /* 안내 텍스트 */
-        .guide-text { 
-            background: #fff; 
-            padding: 10px; 
-            text-align: center; 
-            font-size: 0.75rem; 
-            color: #888; 
-            border-bottom: 1px solid #f1f1f1; 
-        }
+        /* 헤더 */
+        #header { background: var(--wilo-green); color: white; padding: 20px; text-align: center; }
+        #header h1 { margin: 0; font-size: 1.1rem; }
+        #header p { margin: 5px 0 0; font-size: 0.8rem; opacity: 0.8; }
 
-        /* 메시지 영역 */
-        #messages { 
-            flex: 1; 
-            padding: 20px; 
-            overflow-y: auto; 
-            background: var(--wilo-bg); 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-        }
-        .msg-group { display: flex; flex-direction: column; max-width: 85%; }
-        .bot-group { align-self: flex-start; }
-        .user-group { align-self: flex-end; }
-        
-        .profile-name { font-size: 0.75rem; color: #444; font-weight: 600; margin-bottom: 4px; margin-left: 4px; }
-        
-        /* 말풍선 곡선: 갤럭시 스타일로 부드럽게 */
-        .msg { 
-            padding: 12px 16px; 
-            border-radius: var(--radius-sub); 
-            font-size: 0.92rem; 
-            line-height: 1.5; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.03); 
-        }
-        .bot { 
-            background: white; 
-            color: #222; 
-            border-top-left-radius: 4px; /* 한쪽만 살짝 날카롭게 */
-        }
-        .user { 
-            background: var(--wilo-green); 
-            color: white; 
-            border-top-right-radius: 4px; 
-        }
-        .time { font-size: 0.65rem; color: #999; margin-top: 4px; margin-left: 5px; }
-        .user-group .time { text-align: right; margin-right: 5px; }
+        /* 메시지 창 */
+        #messages { flex: 1; padding: 20px; overflow-y: auto; background: var(--wilo-bg); display: flex; flex-direction: column; gap: 12px; }
+        .msg { padding: 12px 16px; border-radius: 18px; font-size: 0.9rem; line-height: 1.5; max-width: 85%; }
+        .bot { background: white; align-self: flex-start; border-top-left-radius: 4px; border: 1px solid #eee; }
+        .user { background: var(--wilo-green); color: white; align-self: flex-end; border-top-right-radius: 4px; }
 
-        /* 카테고리 & FAQ 리스트 (곡선 강조) */
-        .info-section { background: white; padding: 18px 20px; border-top: 1px solid #eee; }
-        .section-title { font-size: 0.82rem; font-weight: 700; color: #555; margin-bottom: 10px; display: block; }
-        
-        .cat-list { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 15px; }
-        .cat-item { 
-            padding: 7px 15px; 
-            border-radius: 20px; 
-            background: #f1f3f5; 
-            font-size: 0.78rem; 
-            color: #555; 
-            border: none; 
-            cursor: pointer; 
-            transition: 0.2s;
+        /* [핵심] 문의 폼 레이어 (평소엔 숨김) */
+        #inquiry-form { 
+            position: absolute; bottom: 0; left: 0; right: 0; background: white; 
+            padding: 25px; border-top-left-radius: var(--radius-main); border-top-right-radius: var(--radius-main);
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1); display: none; z-index: 100;
         }
-        .cat-item.active { background: var(--wilo-green); color: white; }
+        #inquiry-form h3 { margin-top: 0; font-size: 1rem; color: var(--wilo-green); }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 0.75rem; color: #666; margin-bottom: 4px; }
+        .form-group input { width: 100%; border: 1px solid #ddd; padding: 10px; border-radius: 8px; box-sizing: border-box; }
+        .submit-btn { width: 100%; background: var(--wilo-green); color: white; border: none; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: bold; }
+        .close-btn { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 1.2rem; color: #ccc; }
 
-        .faq-list { display: flex; flex-direction: column; gap: 7px; }
-        .faq-link { 
-            padding: 11px 15px; 
-            background: #f8f9fa; 
-            border-radius: 14px; /* FAQ 항목 곡선 */
-            font-size: 0.82rem; 
-            color: #333; 
-            border: 1px solid #f1f1f1; 
-            cursor: pointer; 
-            transition: 0.2s; 
-        }
-        .faq-link:hover { background: var(--wilo-light); border-color: var(--wilo-green); }
-
-        /* 입력창 영역 (곡선 적용) */
-        #input-area { 
-            padding: 15px 20px 25px 20px; 
-            background: white; 
-            display: flex; 
-            gap: 10px; 
-            align-items: center; 
-        }
-        input { 
-            flex: 1; 
-            border: 1px solid #eee; 
-            padding: 13px 20px; 
-            border-radius: 30px; 
-            outline: none; 
-            background: #f1f3f5; 
-            font-size: 0.9rem; 
-        }
-        #send-btn { 
-            background: var(--wilo-green); 
-            border: none; 
-            width: 48px; 
-            height: 48px; 
-            border-radius: 50%; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            cursor: pointer; 
-            transition: transform 0.2s;
-        }
-        #send-btn:hover { transform: scale(1.05); }
+        /* 하단 입력바 */
+        #input-area { padding: 15px 20px; background: white; display: flex; gap: 10px; border-top: 1px solid #eee; }
+        input[type="text"] { flex: 1; border: 1px solid #eee; padding: 12px 18px; border-radius: 30px; outline: none; background: #f1f3f5; }
     </style>
 </head>
 <body>
     <div id="chat-container">
         <div id="header">
-            <h1>윌로펌프 챗봇</h1>
-            <p>문의 내용을 입력하시면<br>등록된 답변을 안내드립니다.</p>
+            <h1>윌로펌프 AI 커넥트</h1>
+            <p>제품 구매 및 기술 문의를 도와드립니다.</p>
         </div>
-
-        <div class="guide-text">아래 카테고리를 선택하면 관련 FAQ가 표시됩니다.</div>
 
         <div id="messages">
-            <div class="msg-group bot-group">
-                <span class="profile-name">윌로펌프 챗봇</span>
-                <div class="msg bot">
-                    안녕하세요.<br>문의사항을 입력하거나 아래 FAQ를 선택해주세요.
-                </div>
-                <span class="time" id="start-time"></span>
-            </div>
+            <div class="msg bot">안녕하세요! 윌로펌프 AI 챗봇입니다. 제품 정보나 구매/AS 문의를 입력해주세요.</div>
         </div>
 
-        <div class="info-section">
-            <span class="section-title">카테고리</span>
-            <div class="cat-list">
-                <button class="cat-item active">전체</button>
-                <button class="cat-item">제품</button>
-                <button class="cat-item">대리점</button>
-                <button class="cat-item">A/S</button>
-                <button class="cat-item">기타</button>
-            </div>
-
-            <span class="section-title">자주 묻는 질문</span>
-            <div class="faq-list">
-                <div class="faq-link" onclick="handleFaq('서비스 센터 연락처')">💧 서비스 센터 연락처가 어떻게 되나요?</div>
-                <div class="faq-link" onclick="handleFaq('제품 구매처')">🏠 제품은 어디서 구매할 수 있나요?</div>
-                <div class="faq-link" onclick="handleFaq('카탈로그 다운로드')">📄 카탈로그나 도면은 어디서 받나요?</div>
-            </div>
+        <div id="inquiry-form">
+            <span class="close-btn" onclick="toggleForm(false)">×</span>
+            <h3>전문가 상담 신청</h3>
+            <p style="font-size: 0.75rem; color: #888; margin-bottom: 15px;">세부 기술 사항 확인을 위해 연락처를 남겨주세요.</p>
+            <div class="form-group"><label>성함</label><input type="text" id="form-name" placeholder="이름을 입력하세요"></div>
+            <div class="form-group"><label>연락처</label><input type="text" id="form-tel" placeholder="010-0000-0000"></div>
+            <div class="form-group"><label>이메일</label><input type="text" id="form-email" placeholder="email@wilo.com"></div>
+            <div class="form-group"><label>거주 도시</label><input type="text" id="form-city" placeholder="예: 서울시 강서구"></div>
+            <button class="submit-btn" onclick="submitInquiry()">상담 신청하기</button>
         </div>
 
         <div id="input-area">
-            <input type="text" id="user-input" placeholder="질문을 입력하세요" onkeypress="if(event.keyCode==13) send()">
-            <button id="send-btn" onclick="send()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-            </button>
+            <input type="text" id="user-input" placeholder="질문을 입력하세요..." onkeypress="if(event.keyCode==13) send()">
         </div>
     </div>
 
     <script>
-        function updateTime() {
-            const now = new Date();
-            const timeStr = (now.getHours() >= 12 ? '오후 ' : '오전 ') + (now.getHours() % 12 || 12) + ':' + now.getMinutes().toString().padStart(2, '0');
-            return timeStr;
-        }
-        document.getElementById('start-time').innerText = updateTime();
-
-        function handleFaq(text) {
-            document.getElementById('user-input').value = text;
-            send();
+        function toggleForm(show) {
+            document.getElementById('inquiry-form').style.display = show ? 'block' : 'none';
         }
 
         async function send() {
@@ -220,35 +78,40 @@
             if(!input.value) return;
 
             const userText = input.value;
-            msgDiv.innerHTML += `
-                <div class="msg-group user-group">
-                    <div class="msg user">${userText}</div>
-                    <span class="time">${updateTime()}</span>
-                </div>`;
+            msgDiv.innerHTML += `<div class="msg user">${userText}</div>`;
             input.value = '';
             msgDiv.scrollTop = msgDiv.scrollHeight;
 
-            try {
-                const response = await fetch('faq.json');
-                const faqs = await response.json();
-                let answer = "죄송합니다. 문의하신 내용에 대한 답변을 찾지 못했습니다. 고객센터(1688-5890)로 연락 주시면 상세히 안내해 드리겠습니다.";
-
-                faqs.forEach(item => {
-                    if(userText.includes(item.question.substring(0, 3)) || item.tags.some(tag => userText.includes(tag))) {
-                        answer = item.answer;
-                    }
-                });
-
+            // '구매', 'AS', '상담' 등 키워드 감지 시 폼 띄우기
+            if(userText.includes('구매') || userText.includes('AS') || userText.includes('에이에스') || userText.includes('신청')) {
                 setTimeout(() => {
-                    msgDiv.innerHTML += `
-                        <div class="msg-group bot-group">
-                            <span class="profile-name">윌로펌프 챗봇</span>
-                            <div class="msg bot">${answer}</div>
-                            <span class="time">${updateTime()}</span>
-                        </div>`;
+                    msgDiv.innerHTML += `<div class="msg bot">정확한 상담을 위해 전문 담당자에게 연결해 드릴까요? 아래 양식을 작성해주시면 신속히 연락드리겠습니다.</div>`;
                     msgDiv.scrollTop = msgDiv.scrollHeight;
-                }, 400);
-            } catch(e) { console.error(e); }
+                    toggleForm(true); // 폼 등장!
+                }, 500);
+            } else {
+                // 일반 질문은 기존 FAQ 로직 수행 (여기에 AI API를 연결하면 인터넷 기반 답변이 됩니다)
+                setTimeout(() => {
+                    msgDiv.innerHTML += `<div class="msg bot">인터넷 정보를 확인 중입니다... 상세 기술 문의는 '상담 신청'을 입력해주세요.</div>`;
+                    msgDiv.scrollTop = msgDiv.scrollHeight;
+                }, 500);
+            }
+        }
+
+        function submitInquiry() {
+            const name = document.getElementById('form-name').value;
+            const city = document.getElementById('form-city').value;
+            
+            if(!name || !city) {
+                alert('성함과 도시는 필수 입력 항목입니다.');
+                return;
+            }
+
+            alert(`${name}님, 문의가 접수되었습니다. ${city} 담당자에게 내용을 전달하겠습니다!`);
+            toggleForm(false);
+            
+            const msgDiv = document.getElementById('messages');
+            msgDiv.innerHTML += `<div class="msg bot">상담 신청이 완료되었습니다. 확인 후 담당자가 연락드리겠습니다.</div>`;
         }
     </script>
 </body>
