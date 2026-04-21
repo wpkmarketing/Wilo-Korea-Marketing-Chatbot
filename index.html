@@ -2,47 +2,146 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Wilo Korea MKT Chatbot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wilo Korea Marketing Chatbot</title>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; }
-        #chat-container { width: 400px; height: 500px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
-        #messages { flex: 1; padding: 20px; overflow-y: auto; border-bottom: 1px solid #eee; }
-        #input-area { display: flex; padding: 10px; }
-        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; outline: none; }
-        button { margin-left: 10px; padding: 10px 20px; background: #0054a6; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        /* [핵심 색상 정의] 윌로그린 적용 (RGB 0, 156, 130) */
+        :root { --wilo-green: #009c82; --wilo-light-green: #e1f5f1; --bg-gray: #f2f4f6; }
+        body { font-family: 'Pretendard', sans-serif; margin: 0; background: var(--bg-gray); display: flex; justify-content: center; height: 100vh; }
+        
+        /* [1단계: 화면 크기 확대] 시원하고 꽉 차게 변경 */
+        #chat-container { width: 90%; max-width: 800px; height: 90vh; background: white; margin-top: 5vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 25px; overflow: hidden; position: relative; }
+        
+        /* 상단 헤더 (S-CRM봇 느낌의 그라데이션) */
+        #header { background: linear-gradient(135deg, var(--wilo-green), #018a73); color: white; padding: 25px; display: flex; align-items: center; gap: 15px; box-shadow: 0 3px 10px rgba(0,0,0,0.15); z-index: 10; }
+        #header .logo { font-size: 35px; }
+        #header .title-area { display: flex; flex-direction: column; }
+        #header .title { font-weight: bold; font-size: 1.2em; }
+        #header .subtitle { font-size: 0.9em; opacity: 0.9; margin-top: 4px; }
+        
+        /* 메시지 영역 */
+        #messages { flex: 1; padding: 25px; overflow-y: auto; background: white; display: flex; flex-direction: column; gap: 20px; }
+        .msg { max-width: 80%; padding: 14px 18px; border-radius: 18px; font-size: 15px; line-height: 1.6; position: relative; }
+        .bot { background: var(--wilo-light-green); align-self: flex-start; color: #1a1a1a; border-bottom-left-radius: 3px; }
+        .user { background: var(--wilo-green); color: white; align-self: flex-end; border-bottom-right-radius: 3px; }
+        .msg-time { font-size: 11px; color: #888; margin-top: -15px; align-self: flex-start; margin-left: 2px; }
+        .user + .msg-time { align-self: flex-end; margin-right: 2px; margin-left: 0; }
+
+        /* [핵심 기능 1: 카테고리 버튼] 윌로그린 포인트 */
+        #category-area { padding: 15px 25px; display: flex; flex-wrap: wrap; gap: 10px; border-top: 1px solid #eee; background: white; }
+        #category-area strong { font-size: 0.95em; color: #444; width: 100%; margin-bottom: 5px; }
+        .cat-btn { padding: 8px 18px; background: white; border: 1px solid #ccc; border-radius: 20px; font-size: 13px; color: #555; cursor: pointer; transition: 0.2s; }
+        .cat-btn:hover { background: var(--wilo-light-green); border-color: var(--wilo-green); color: var(--wilo-green); }
+        .cat-btn.active { background: var(--wilo-green); color: white; border-color: var(--wilo-green); font-weight: bold; }
+
+        /* [핵심 기능 2: 자주 묻는 질문(FAQ) 리스트] 예시 이미지 스타일 */
+        #faq-area { padding: 5px 25px 15px 25px; display: flex; flex-direction: column; gap: 10px; background: white; }
+        #faq-area strong { font-size: 0.95em; color: #444; margin-bottom: 5px; }
+        .faq-item { padding: 15px; background: var(--bg-gray); border-radius: 12px; font-size: 14px; color: #333; cursor: pointer; transition: 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .faq-item:hover { background: #e8eaed; transform: translateY(-1px); }
+
+        /* 하단 입력창 및 윌로그린 전송 버튼 */
+        #input-area { padding: 20px 25px; border-top: 1px solid #eee; display: flex; gap: 10px; background: white; z-index: 10; }
+        input { flex: 1; border: 1px solid #ddd; padding: 15px; border-radius: 25px; outline: none; font-size: 15px; background: white; }
+        #send-btn { background: var(--wilo-green); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; justify-content:center; align-items:center; box-shadow: 0 3px 8px rgba(0,0,0,0.15); transition: 0.2s; }
+        #send-btn:hover { background: #018a73; transform: scale(1.05); }
+
+        /* 로딩 애니메이션 */
+        .typing { display: flex; gap: 5px; margin-left: 2px; }
+        .typing div { width: 8px; height: 8px; background: #bbb; border-radius: 50%; animation: typing 1s infinite; }
+        .typing div:nth-child(2) { animation-delay: 0.2s; }
+        .typing div:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
     </style>
 </head>
 <body>
     <div id="chat-container">
-        <div id="messages"><strong>💧 윌로코리아 마케팅팀 챗봇</strong><br>무엇을 도와드릴까요?</div>
+        <div id="header">
+            <span class="logo">💧</span>
+            <div class="title-area">
+                <span class="title">Wilo Korea 마케팅팀 챗봇</span>
+                <span class="subtitle">윌로그린 스마트 지원 시스템</span>
+            </div>
+        </div>
+        
+        <div id="messages">
+            <div class="msg bot">안녕하세요! 윌로코리아 마케팅팀 챗봇입니다. 무엇을 도와드릴까요?</div>
+            <div class="msg-time bot-time">오전 10:11</div>
+        </div>
+
+        <div id="category-area">
+            <strong>카테고리</strong>
+            <button class="cat-btn active">전체</button>
+            <button class="cat-btn">제품</button>
+            <button class="cat-btn">대리점</button>
+            <button class="cat-btn">A/S</button>
+            <button class="cat-btn">자료실</button>
+        </div>
+
+        <div id="faq-area">
+            <strong>자주 묻는 질문</strong>
+            <div class="faq-item">💧 윌로펌프 카탈로그 어디서 다운로드 받나요?</div>
+            <div class="faq-item">🛠️ 서비스 센터 전화번호가 궁금합니다.</div>
+            <div class="faq-item">🏠 서울/경기 지역 대리점 연락처를 알려주세요.</div>
+        </div>
+
         <div id="input-area">
-            <input type="text" id="user-input" placeholder="질문을 입력하세요...">
-            <button onclick="send()">전송</button>
+            <input type="text" id="user-input" placeholder="문의하실 내용을 입력해주세요..." onkeypress="if(event.keyCode==13) send()">
+            <button id="send-btn" onclick="send()">📩</button>
         </div>
     </div>
 
     <script>
+        // 현재 시간 가져오기 함수
+        function getTime() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? '오후' : '오전';
+            hours = hours % 12 || 12;
+            return `${ampm} ${hours}:${minutes}`;
+        }
+
         async function send() {
             const input = document.getElementById('user-input');
             const msgDiv = document.getElementById('messages');
             if(!input.value) return;
 
-            msgDiv.innerHTML += `<div><strong>나:</strong> ${input.value}</div>`;
-            
-            // faq.json 데이터 가져오기 로직 (간단 구현)
-            const response = await fetch('faq.json');
-            const faqs = await response.json();
-            
-            let answer = "상세 상담이 필요하시면 1688-5890으로 연락 부탁드립니다.";
-            faqs.forEach(item => {
-                if(input.value.includes(item.question.substring(0, 5)) || item.tags.some(tag => input.value.includes(tag))) {
-                    answer = item.answer;
-                }
-            });
-
-            msgDiv.innerHTML += `<div style="margin-top:10px; color:#0054a6;"><strong>챗봇:</strong> ${answer}</div>`;
+            // 사용자 메시지 추가
+            msgDiv.innerHTML += `<div class="msg user">${input.value}</div><div class="msg-time user-time">${getTime()}</div>`;
+            const userText = input.value;
             input.value = '';
             msgDiv.scrollTop = msgDiv.scrollHeight;
+
+            // 로딩 표시 추가
+            const loadingId = 'loading-' + Date.now();
+            msgDiv.innerHTML += `<div class="msg bot" id="${loadingId}"><div class="typing"><div></div><div></div><div></div></div></div>`;
+            msgDiv.scrollTop = msgDiv.scrollHeight;
+
+            // 데이터 가져오기 및 답변 검색 (JSON 데이터 로직 유지)
+            try {
+                const response = await fetch('faq.json');
+                const faqs = await response.json();
+                
+                let answer = "죄송합니다. 상세한 내용은 1688-5890으로 문의주시면 친절히 안내해 드리겠습니다.";
+                
+                faqs.forEach(item => {
+                    if(userText.includes(item.question.substring(0, 3)) || item.tags.some(tag => userText.includes(tag))) {
+                        answer = item.answer;
+                    }
+                });
+
+                // 답변 추가 (로딩 제거 후)
+                setTimeout(() => {
+                    document.getElementById(loadingId).remove();
+                    msgDiv.innerHTML += `<div class="msg bot">${answer}</div><div class="msg-time bot-time">${getTime()}</div>`;
+                    msgDiv.scrollTop = msgDiv.scrollHeight;
+                }, 800);
+
+            } catch(e) {
+                document.getElementById(loadingId).remove();
+                msgDiv.innerHTML += `<div class="msg bot">데이터 로드 실패: faq.json 파일을 확인해주세요.</div>`;
+            }
         }
     </script>
 </body>
